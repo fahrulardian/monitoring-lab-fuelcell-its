@@ -905,7 +905,6 @@ function refreshData(){
 
 function boot(){
   initTheme();
-  if(DEMO_MODE){ var db=$('#demoBanner'); if(db) db.style.display='block'; }
   refreshData().then(function(){
     $('#screenLoad').style.display='none';
     render();
