@@ -1,0 +1,186 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Denah Laboratorium Fuel Cell</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: a single centered floor plan with numbered zone markers, and a zone list beside it on wide screens and below it on phones.
+   Palette: same muted slate-indigo base as the homepage, lavender for selection, sage and peach as secondary. No cyan. */
+:root{
+  --bg:#0d1120;
+  --panel:#151b2e;
+  --panel-2:#1b2339;
+  --line:#2a3452;
+  --fg:#eef1fa;
+  --fg-soft:#a3adc8;
+  --lavender:#c3b5ff;
+  --sage:#a8dcc0;
+  --peach:#f6c9a2;
+  --font:'Manrope','Segoe UI',system-ui,Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--fg);
+  font:400 15px/1.6 var(--font);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  overflow-x:hidden;
+}
+.wrap{max-width:1080px;margin:0 auto;padding-block:36px 48px}
+h1{font:800 clamp(24px,4.4vw,34px)/1.2 var(--font);margin:0 0 8px;letter-spacing:-.01em;text-wrap:balance}
+.lead{color:var(--fg-soft);margin:0 0 26px;max-width:640px}
+.back{
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:18px;
+  color:var(--fg-soft);text-decoration:none;font:600 14px/1 var(--font);
+  padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
+}
+.back:hover{color:var(--fg)}
+.back:focus-visible{outline:2px solid var(--peach);outline-offset:3px}
+
+.layout{display:grid;gap:22px;grid-template-columns:1fr}
+@media(min-width:880px){.layout{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:start}}
+
+/* Floor plan */
+.plan{
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line);border-radius:18px;padding:14px;
+}
+.stage{position:relative;width:100%;max-width:440px;margin:0 auto;aspect-ratio:820/1436}
+.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;opacity:.92}
+.zona{
+  position:absolute;border:1.5px solid var(--z,var(--lavender));
+  background:color-mix(in srgb,var(--z,var(--lavender)) 16%,transparent);
+  border-radius:6px;cursor:pointer;padding:0;transition:background .2s ease,box-shadow .2s ease;
+}
+.zona:hover,.zona:focus-visible{background:color-mix(in srgb,var(--z,var(--lavender)) 32%,transparent);outline:none;box-shadow:0 0 0 2px var(--z,var(--lavender))}
+.zona.on{background:color-mix(in srgb,var(--z,var(--lavender)) 40%,transparent);box-shadow:0 0 0 2px var(--z,var(--lavender))}
+.znum{
+  position:absolute;top:-9px;left:-9px;min-width:22px;height:22px;padding:0 5px;border-radius:999px;
+  display:grid;place-items:center;font:700 11px/1 var(--font);color:#141026;background:var(--z,var(--lavender));
+}
+
+/* Zone list */
+.side{display:grid;gap:12px}
+.hint{color:var(--fg-soft);font-size:14px;margin:0}
+.list{display:grid;gap:8px;grid-template-columns:1fr}
+@media(min-width:560px){.list{grid-template-columns:1fr 1fr}}
+.item{
+  display:flex;align-items:center;gap:12px;text-align:left;width:100%;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  color:var(--fg);font:600 14.5px/1.3 var(--font);cursor:pointer;min-width:0;
+  transition:border-color .2s ease,background .2s ease;
+}
+.item:hover{border-color:color-mix(in srgb,var(--lavender) 50%,transparent)}
+.item.on{background:var(--panel-2);border-color:var(--lavender)}
+.item:focus-visible{outline:2px solid var(--peach);outline-offset:2px}
+.item .n{
+  flex:0 0 auto;min-width:30px;height:30px;padding:0 6px;border-radius:9px;display:grid;place-items:center;
+  font:700 12px/1 var(--font);color:#141026;background:var(--z,var(--lavender));
+}
+.item span.name{min-width:0;overflow-wrap:anywhere}
+
+.detail{
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+  border-radius:16px;padding:18px 20px;
+}
+.detail .k{font:600 12px/1 var(--font);color:var(--lavender);letter-spacing:.04em;text-transform:uppercase}
+.detail h2{font:700 19px/1.35 var(--font);margin:8px 0 6px}
+.detail p{margin:0;color:var(--fg-soft);font-size:14.5px}
+
+footer{
+  margin-top:36px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--fg-soft);font-size:13.5px;text-align:center;
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <a class="back" href="https://www.rndfc.web.id" target="_blank" rel="noopener">← Kembali ke beranda</a>
+  <h1>Denah Laboratorium</h1>
+  <p class="lead">Ketuk area pada denah atau pilih nama di daftar untuk melihat zona tersebut. Setiap zona berisi alat dan bahan yang tersimpan di lokasinya.</p>
+
+  <div class="layout">
+    <section class="plan" aria-label="Denah laboratorium">
+      <div class="stage" id="stage">
+        <img src="assets/denah_opt.jpg" alt="Denah Laboratorium R&amp;D Fuel Cell ITS">
+      </div>
+    </section>
+
+    <section class="side">
+      <p class="hint">Pilih zona untuk melihat detailnya.</p>
+      <div class="detail" id="detail" aria-live="polite">
+        <div class="k" id="dk">Zona dipilih</div>
+        <h2 id="dh">Belum ada zona dipilih</h2>
+        <p id="dp">Ketuk salah satu zona di denah atau daftar di bawah.</p>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
+  </div>
+
+  <footer>© Laboratorium R&amp;D Fuel Cell ITS · Institut Teknologi Sepuluh Nopember</footer>
+</div>
+
+<script>
+var ZONES = [
+  {id:'Z01',nama:'Meja Besi 1 & 2',x:1.95,y:23.12,w:32.2,h:16.43,c:'#c3b5ff'},
+  {id:'Z02',nama:'Lemari Besi 2',x:51.95,y:22.77,w:31.1,h:4.67,c:'#c3b5ff'},
+  {id:'Z03',nama:'Lemari Besi 3 & 4',x:1.59,y:39.76,w:9.02,h:15.53,c:'#c3b5ff'},
+  {id:'Z04',nama:'Meja Besi 3',x:34.88,y:32.66,w:40.61,h:13.51,c:'#a8dcc0'},
+  {id:'Z05',nama:'Alat Spray Coating',x:81.22,y:32.52,w:18.29,h:18.38,c:'#f6c9a2'},
+  {id:'Z06',nama:'Rak Lemari',x:1.34,y:58.5,w:9.39,h:10.86,c:'#c3b5ff'},
+  {id:'Z07',nama:'Lemari Kaca',x:1.22,y:69.15,w:9.39,h:5.92,c:'#c3b5ff'},
+  {id:'Z08',nama:'Meja Panjang',x:27.32,y:55.15,w:62.07,h:15.88,c:'#a8dcc0'},
+  {id:'Z09',nama:'Lemari Kayu 1-4',x:23.54,y:78.41,w:75.49,h:4.46,c:'#d8c7ff'},
+  {id:'Z10',nama:'Wastafel',x:2.07,y:2.79,w:7.56,h:2.65,c:'#9be7c4'},
+  {id:'Z11',nama:'Lemari Kayu 5 & 6',x:10.73,y:2.58,w:39.15,h:4.39,c:'#d8c7ff'},
+  {id:'Z12',nama:'Lemari Besi 1',x:1.95,y:8.64,w:6.34,h:8.91,c:'#c3b5ff'},
+  {id:'Z13',nama:'Meja Kayu',x:10.12,y:8.43,w:25.24,h:9.33,c:'#a8dcc0'},
+  {id:'Z14',nama:'Meja Besi 4',x:2.07,y:18.18,w:32.56,h:4.11,c:'#c3b5ff'},
+  {id:'Z15',nama:'Lemari Asam',x:41.59,y:7.17,w:8.54,h:9.4,c:'#f2a7a7'},
+  {id:'Z16',nama:'Meja Keramik Oven',x:29.39,y:83.43,w:10.12,h:4.18,c:'#f6c9a2'},
+  {id:'Z17',nama:'Meja Kayu Doctor Blade',x:40.12,y:83.57,w:12.93,h:4.87,c:'#a8dcc0'},
+  {id:'Z18',nama:'Meja Kayu 3D Print',x:53.29,y:83.5,w:26.46,h:5.29,c:'#a8dcc0'},
+  {id:'Z19',nama:'Meja Kayu',x:87.2,y:83.7,w:10.73,h:7.87,c:'#a8dcc0'},
+  {id:'Z20',nama:'Furnace Tubular',x:53.41,y:93.38,w:16.22,h:4.87,c:'#f2a7a7'}
+];
+var stage = document.getElementById('stage');
+var list = document.getElementById('list');
+var dk = document.getElementById('dk'), dh = document.getElementById('dh'), dp = document.getElementById('dp');
+
+function select(i){
+  var z = ZONES[i];
+  document.querySelectorAll('.zona').forEach(function(el,k){ el.classList.toggle('on', k===i); });
+  document.querySelectorAll('.item').forEach(function(el,k){ el.classList.toggle('on', k===i); });
+  dk.textContent = 'Zona ' + z.id;
+  dh.textContent = z.nama;
+  dp.textContent = 'Lokasi ' + z.nama + ' pada denah. Lihat daftar alat dan bahan di halaman Monitoring.';
+}
+
+ZONES.forEach(function(z,i){
+  var b = document.createElement('button');
+  b.className = 'zona';
+  b.type = 'button';
+  b.setAttribute('aria-label', 'Zona ' + z.id + ': ' + z.nama);
+  b.style.left = z.x + '%';
+  b.style.top = z.y + '%';
+  b.style.width = z.w + '%';
+  b.style.height = z.h + '%';
+  b.style.setProperty('--z', z.c);
+  b.onclick = function(){ select(i); };
+  var n = document.createElement('span');
+  n.className = 'znum';
+  n.textContent = i+1;
+  b.appendChild(n);
+  stage.appendChild(b);
+
+  var it = document.createElement('button');
+  it.className = 'item';
+  it.type = 'button';
+  it.style.setProperty('--z', z.c);
+  it.onclick = function(){ select(i); };
+  it.innerHTML = '<span class="n">' + (i+1) + '</span><span class="name"></span>';
+  it.querySelector('.name').textContent = z.nama;
+  list.appendChild(it);
+});
+</script>
