@@ -644,7 +644,7 @@ function openDetail(key,id){
   }
   var body=''+
     '<div class="detail-hero">'+
-      '<div class="detail-photo">'+(x.foto?'<img src="'+esc(x.foto)+'" onerror="this.parentNode.innerHTML=\''+ICON_CAT[key]+'\'">':ICON_CAT[key])+'</div>'+
+      '<div class="detail-photo'+(x.foto?' zoomable" title="Ketuk untuk memperbesar" onclick="var i=this.querySelector(\'img\');if(i)openLightbox(i.src)':'')+'">'+(x.foto?'<img src="'+esc(x.foto)+'" onerror="this.parentNode.innerHTML=\''+ICON_CAT[key]+'\'">':ICON_CAT[key])+'</div>'+
       '<div style="min-width:0;flex:1"><div class="detail-title">'+esc(name)+'</div>'+
         '<div class="update-note">'+SVG.clock+' Update terakhir: '+esc(x.last_update||'-')+'</div></div>'+
     '</div>'+
@@ -657,6 +657,26 @@ function openDetail(key,id){
     '<button class="btn btn-danger" onclick="confirmDelete(\''+key+'\',\''+esc(id)+'\')">'+SVG.trash+'</button>';
   showModal((key==='peralatan'?'🔬':key==='bahan'?'🧪':'🔩')+' Detail', body, foot);
   setTimeout(function(){ renderQR($('#detailQr'), x.kode||x.id, 120); }, 60);
+}
+/* ---- lightbox: foto penuh ---- */
+function openLightbox(src){
+  if(!src) return;
+  closeLightbox();
+  var lb=document.createElement('div');
+  lb.className='lightbox'; lb.id='lightbox';
+  lb.innerHTML='<button class="lb-close" aria-label="Tutup">&times;</button><img alt="Foto alat">';
+  lb.querySelector('img').src=src;
+  lb.onclick=closeLightbox;
+  document.body.appendChild(lb);
+  requestAnimationFrame(function(){ lb.classList.add('show'); });
+  document.addEventListener('keydown', lbKey);
+}
+function lbKey(e){ if(e.key==='Escape') closeLightbox(); }
+function closeLightbox(){
+  var lb=document.getElementById('lightbox'); if(!lb) return;
+  document.removeEventListener('keydown', lbKey);
+  lb.classList.remove('show');
+  setTimeout(function(){ lb.remove(); }, 200);
 }
 function formulaHtml(f){ if(!f)return '-'; return esc(f).replace(/(\d+)/g,'<sub>$1</sub>'); }
 

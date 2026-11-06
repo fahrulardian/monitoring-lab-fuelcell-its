@@ -398,6 +398,17 @@ table.tbl tr:last-child td{border-bottom:0;}
 .detail-photo{width:104px;height:104px;flex:0 0 104px;border-radius:14px;object-fit:cover;
   background:var(--bg-soft);display:grid;place-items:center;color:var(--text-mut);font-size:30px;overflow:hidden;}
 .detail-photo img{width:100%;height:100%;object-fit:cover;}
+.detail-photo.zoomable{cursor:zoom-in;transition:transform .15s ease;}
+.detail-photo.zoomable:hover{transform:scale(1.03);}
+.detail-photo.zoomable:focus-visible{outline:2px solid currentColor;outline-offset:2px;}
+.lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;
+  padding:max(56px,env(safe-area-inset-top,0px)) 12px max(16px,env(safe-area-inset-bottom,0px));cursor:zoom-out;opacity:0;transition:opacity .2s ease;}
+.lightbox.show{opacity:1;}
+.lightbox img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);cursor:zoom-out;}
+.lightbox .lb-close{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:12px;width:44px;height:44px;border-radius:50%;border:0;
+  background:rgba(255,255,255,.16);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:grid;place-items:center;}
+.lightbox .lb-close:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+
 .detail-title{font-size:18px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px;}
 .kv{display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:13.5px;margin-top:4px;}
 .kv dt{color:var(--text-mut);}
@@ -1157,7 +1168,7 @@ function openDetail(key,id){
   }
   var body=''+
     '<div class="detail-hero">'+
-      '<div class="detail-photo">'+(x.foto?'<img src="'+esc(x.foto)+'" onerror="this.parentNode.innerHTML=\''+ICON_CAT[key]+'\'">':ICON_CAT[key])+'</div>'+
+      '<div class="detail-photo'+(x.foto?' zoomable" title="Ketuk untuk memperbesar" onclick="var i=this.querySelector(\'img\');if(i)openLightbox(i.src)':'')+'">'+(x.foto?'<img src="'+esc(x.foto)+'" onerror="this.parentNode.innerHTML=\''+ICON_CAT[key]+'\'">':ICON_CAT[key])+'</div>'+
       '<div style="min-width:0;flex:1"><div class="detail-title">'+esc(name)+'</div>'+
         '<div class="update-note">'+SVG.clock+' Update terakhir: '+esc(x.last_update||'-')+'</div></div>'+
     '</div>'+
@@ -1170,6 +1181,26 @@ function openDetail(key,id){
     '<button class="btn btn-danger" onclick="confirmDelete(\''+key+'\',\''+esc(id)+'\')">'+SVG.trash+'</button>';
   showModal((key==='peralatan'?'🔬':key==='bahan'?'🧪':'🔩')+' Detail', body, foot);
   setTimeout(function(){ renderQR($('#detailQr'), x.kode||x.id, 120); }, 60);
+}
+/* ---- lightbox: foto penuh ---- */
+function openLightbox(src){
+  if(!src) return;
+  closeLightbox();
+  var lb=document.createElement('div');
+  lb.className='lightbox'; lb.id='lightbox';
+  lb.innerHTML='<button class="lb-close" aria-label="Tutup">&times;</button><img alt="Foto alat">';
+  lb.querySelector('img').src=src;
+  lb.onclick=closeLightbox;
+  document.body.appendChild(lb);
+  requestAnimationFrame(function(){ lb.classList.add('show'); });
+  document.addEventListener('keydown', lbKey);
+}
+function lbKey(e){ if(e.key==='Escape') closeLightbox(); }
+function closeLightbox(){
+  var lb=document.getElementById('lightbox'); if(!lb) return;
+  document.removeEventListener('keydown', lbKey);
+  lb.classList.remove('show');
+  setTimeout(function(){ lb.remove(); }, 200);
 }
 function formulaHtml(f){ if(!f)return '-'; return esc(f).replace(/(\d+)/g,'<sub>$1</sub>'); }
 
