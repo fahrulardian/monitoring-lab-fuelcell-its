@@ -27,7 +27,7 @@ var SHEETS = {
 // Definisi kolom tiap tab. Urutan kolom = urutan di sheet.
 var HEADERS = {
   peralatan: ['id','kode','nama','foto','jumlah','kondisi','lokasi','keterangan','last_update'],
-  bahan:     ['id','kode','nama_indo','nama_iupac','formula','jumlah','satuan','lokasi','foto','keterangan','last_update'],
+  bahan:     ['id','kode','nama_indo','nama_iupac','formula','jumlah','satuan','lokasi','foto','keterangan','last_update','isi_kemasan'],
   komponen:  ['id','kode','nama','foto','jumlah','lokasi','keterangan','last_update'],
   // Zona denah: koordinat dalam PERSEN (0-100) agar responsif di semua layar
   denah:     ['id','nama_lokasi','x','y','w','h','warna','keterangan'],
@@ -87,8 +87,15 @@ function ensureDatabase_() {
     if (!sh) sh = ss.insertSheet(name);
     // Pastikan header ada
     var head = HEADERS[key];
+    // Migrasi: tambah kolom baru di akhir header untuk sheet lama
+    if (sh.getMaxColumns() < head.length) sh.insertColumnsAfter(sh.getMaxColumns(), head.length - sh.getMaxColumns());
     var firstRow = sh.getRange(1, 1, 1, head.length).getValues()[0];
     var empty = firstRow.every(function (c) { return c === '' || c === null; });
+    if (!empty) {
+      head.forEach(function (h, i) {
+        if (h && (firstRow[i] === '' || firstRow[i] === null)) sh.getRange(1, i + 1).setValue(h).setFontWeight('bold');
+      });
+    }
     if (empty) {
       sh.getRange(1, 1, 1, head.length).setValues([head]);
       sh.setFrozenRows(1);
