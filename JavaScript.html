@@ -84,9 +84,21 @@ var API = (function () {
       {id:'Z20',nama_lokasi:'Furnace Tubular',x:53.41,y:93.38,w:16.22,h:4.87,warna:'#dc2626',keterangan:''}
     ]
   };
+  var demoLog=[];
+  function demoLogStok(id,nama,sebelum,sesudah,satuan,ket){
+    var s=Math.round((sesudah-sebelum)*1000)/1000; if(s===0 && ket!=='Stok awal') return;
+    var d=new Date(), p=function(n){return String(n).padStart(2,'0');};
+    var tgl=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+    demoLog.push({tanggal:tgl, waktu:tgl+' '+p(d.getHours())+':'+p(d.getMinutes()), item_id:id, nama:nama, 
+      jenis:ket==='Stok awal'?'Stok awal':(s<0?'Pengurangan':'Penambahan'), sebelum:sebelum, sesudah:sesudah, selisih:s, satuan:satuan||'', keterangan:ket});
+  }
   function clone(x){return JSON.parse(JSON.stringify(x));}
 
   return {
+    getLogBahan: function (dari,sampai) {
+      if (DEMO_MODE) return Promise.resolve(clone(demoLog.filter(function(r){return r.tanggal>=dari&&r.tanggal<=sampai;})));
+      return gsrun('getLogBahan',[dari,sampai]);
+    },
     getAllData: function () {
       if (DEMO_MODE) return Promise.resolve(clone({
         peralatan:demo.peralatan, bahan:demo.bahan, komponen:demo.komponen,
@@ -101,6 +113,7 @@ var API = (function () {
         data.id=data.id||id; data.kode=data.kode||data.id;
         data.last_update=new Date().toISOString().slice(0,16).replace('T',' ');
         demo[key].push(clone(data));
+        if(key==='bahan' && num(data.jumlah)>0) demoLogStok(data.id,data.nama_indo,0,num(data.jumlah),data.satuan,'Stok awal');
         return Promise.resolve({ok:true,id:data.id,kode:data.kode});
       }
       return gsrun('addItem',[key,data]);
@@ -109,7 +122,8 @@ var API = (function () {
       if (DEMO_MODE) {
         var i=demo[key].findIndex(function(x){return x.id===data.id;});
         if(i>=0){data.last_update=new Date().toISOString().slice(0,16).replace('T',' ');
-          demo[key][i]=Object.assign({},demo[key][i],data);}
+          var prevB=demo[key][i]; demo[key][i]=Object.assign({},demo[key][i],data);
+          if(key==='bahan') demoLogStok(data.id,prevB.nama_indo,num(prevB.jumlah),num(demo[key][i].jumlah),demo[key][i].satuan,'Edit stok');}
         return Promise.resolve({ok:true,id:data.id});
       }
       return gsrun('updateItem',[key,data]);
@@ -428,6 +442,7 @@ function renderDatabase(key){
         'value="'+esc(STATE.search[key])+'" oninput="onSearchInput(\''+key+'\',this.value)">'+
         '<button class="icon-btn" style="width:34px;height:34px;border:0;background:transparent" title="Mode scan (fokus & deteksi scanner)" onclick="focusSearch(true)">'+SVG.scan+'</button>'+
       '</div>'+
+      (key==='bahan'?'<button class="btn btn-ghost" onclick="openRekap()">'+SVG.list+'<span class="hide-sm">Rekap</span></button>':'')+
       '<button class="btn btn-primary" onclick="openForm(\''+key+'\')">'+SVG.plus+'<span class="hide-sm">Tambah</span></button>'+
     '</div>'+
     '<div class="controls-row">'+
@@ -683,6 +698,38 @@ function closeLightbox(){
   document.removeEventListener('keydown', lbKey);
   lb.classList.remove('show');
   setTimeout(function(){ lb.remove(); }, 200);
+}
+function openRekap(){
+  var today=isoLocal(new Date()), from=isoLocal(new Date(Date.now()-6*864e5));
+  var body='<div class="field-row"><div class="field"><label>Dari</label><input class="input" type="date" id="rkDari" value="'+from+'"></div>'+
+    '<div class="field"><label>Sampai</label><input class="input" type="date" id="rkSampai" value="'+today+'"></div></div>'+
+    '<div id="rkOut" class="muted"></div>';
+  var foot='<button class="btn btn-ghost" onclick="closeModal()">Tutup</button><button class="btn btn-primary" onclick="loadRekap()">Tampilkan</button>';
+  showModal('📊 Rekap pemakaian bahan', body, foot);
+  loadRekap();
+}
+function isoLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function loadRekap(){
+  var out=$('#rkOut'); if(!out) return;
+  out.innerHTML='<span class="loader"></span> Memuat...';
+  API.getLogBahan(val('rkDari'),val('rkSampai')).then(function(rows){
+    if(!rows.length){out.innerHTML='Tidak ada perubahan stok pada rentang ini.';return;}
+    var g={};
+    rows.forEach(function(r){
+      var k=r.tanggal+'|'+r.item_id;
+      if(!g[k]) g[k]={tanggal:r.tanggal,nama:r.nama||'',satuan:r.satuan||'',kurang:0,tambah:0,akhir:r.sesudah};
+      if(r.selisih<0) g[k].kurang+=-r.selisih; else if(r.selisih>0) g[k].tambah+=r.selisih;
+      g[k].akhir=r.sesudah;
+    });
+    var list=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){
+      if(a.tanggal!==b.tanggal) return a.tanggal<b.tanggal?1:-1; return a.nama.localeCompare(b.nama);});
+    out.innerHTML='<div class="table-wrap"><table class="tbl"><thead><tr><th>Tanggal</th><th>Bahan</th><th>Pemakaian</th><th>Penambahan</th><th>Sisa akhir</th></tr></thead><tbody>'+
+      list.map(function(r){return '<tr><td>'+esc(r.tanggal)+'</td><td>'+esc(r.nama)+'</td>'+
+        '<td>'+(r.kurang?'<b>-'+fmtQty(r.kurang)+'</b> '+esc(r.satuan):'-')+'</td>'+
+        '<td>'+(r.tambah?'<b>+'+fmtQty(r.tambah)+'</b> '+esc(r.satuan):'-')+'</td>'+
+        '<td>'+fmtQty(r.akhir)+' '+esc(r.satuan)+'</td></tr>';}).join('')+
+      '</tbody></table></div>';
+  }).catch(function(){out.innerHTML='Gagal memuat rekap.';});
 }
 function formulaHtml(f){ if(!f)return '-'; return esc(f).replace(/(\d+)/g,'<sub>$1</sub>'); }
 

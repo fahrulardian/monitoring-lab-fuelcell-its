@@ -21,11 +21,13 @@ var SHEETS = {
   bahan:     'Bahan',
   komponen:  'Komponen',
   denah:     'Denah',
-  config:    'Config'
+  config:    'Config',
+  log:       'Log'
 };
 
 // Definisi kolom tiap tab. Urutan kolom = urutan di sheet.
 var HEADERS = {
+  log: ['id','waktu','tanggal','item_id','nama','jenis','jumlah_sebelum','jumlah_sesudah','selisih','satuan','keterangan'],
   peralatan: ['id','kode','nama','foto','jumlah','kondisi','lokasi','keterangan','last_update'],
   bahan:     ['id','kode','nama_indo','nama_iupac','formula','jumlah','satuan','lokasi','foto','keterangan','last_update','isi_kemasan'],
   komponen:  ['id','kode','nama','foto','jumlah','lokasi','keterangan','last_update'],
@@ -223,7 +225,36 @@ function addItem(key, data) {
 
   var row = head.map(function (h) { return (data[h] !== undefined && data[h] !== null) ? data[h] : ''; });
   sh.appendRow(row);
+  if (key === 'bahan' && Number(data.jumlah) > 0) logPerubahanStok_(data.id, data.nama_indo, 0, Number(data.jumlah) || 0, data.satuan, 'Stok awal');
   return { ok: true, id: data.id, kode: data.kode };
+}
+
+/** Catat perubahan stok bahan ke tab Log (hanya bila jumlah berubah). */
+function logPerubahanStok_(itemId, nama, sebelum, sesudah, satuan, keterangan) {
+  var selisih = Math.round((sesudah - sebelum) * 1000) / 1000;
+  if (selisih === 0 && keterangan !== 'Stok awal') return;
+  var ss = getDb_();
+  var sh = ss.getSheetByName(SHEETS.log);
+  if (!sh) {
+    sh = ss.insertSheet(SHEETS.log);
+    sh.getRange(1, 1, 1, HEADERS.log.length).setValues([HEADERS.log]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  var jenis = keterangan === 'Stok awal' ? 'Stok awal' : (selisih < 0 ? 'Pengurangan' : 'Penambahan');
+  sh.appendRow([newId_('LOG'), nowStr_(), Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    itemId, nama || '', jenis, sebelum, sesudah, selisih, satuan || '', keterangan]);
+}
+
+/** Ambil log stok bahan dalam rentang tanggal (yyyy-MM-dd). */
+function getLogBahan(dari, sampai) {
+  return sheetToObjects_('log').filter(function (r) {
+    var t = String(r.tanggal).slice(0, 10);
+    return (!dari || t >= dari) && (!sampai || t <= sampai);
+  }).map(function (r) {
+    return { tanggal: String(r.tanggal).slice(0, 10), waktu: r.waktu, item_id: r.item_id, nama: r.nama, jenis: r.jenis,
+      sebelum: Number(r.jumlah_sebelum) || 0, sesudah: Number(r.jumlah_sesudah) || 0,
+      selisih: Number(r.selisih) || 0, satuan: r.satuan, keterangan: r.keterangan };
+  });
 }
 
 /** Update data berdasarkan id. */
@@ -240,6 +271,10 @@ function updateItem(key, data) {
     return (data[h] !== undefined) ? data[h] : current[c];
   });
   sh.getRange(r, 1, 1, head.length).setValues([row]);
+  if (key === 'bahan') {
+    var iJ = head.indexOf('jumlah');
+    logPerubahanStok_(data.id, row[head.indexOf('nama_indo')], Number(current[iJ]) || 0, Number(row[iJ]) || 0, row[head.indexOf('satuan')], 'Edit stok');
+  }
   return { ok: true, id: data.id };
 }
 
