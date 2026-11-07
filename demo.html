@@ -950,7 +950,7 @@ function renderDatabase(key){
   var info=catInfo(key);
   var sortOpts = {
     peralatan:[['nama','Nama'],['kondisi','Kondisi'],['jumlah','Jumlah stok']],
-    bahan:[['nama_indo','Nama'],['nama_iupac','Nama IUPAC'],['formula','Formula'],['jumlah','Jumlah stok'],['lokasi','Lokasi']],
+    bahan:[['nama_indo','Nama'],['nama_iupac','Nama IUPAC'],['formula','Formula'],['jumlah','Jumlah stok'],['sisa','Sisa (%)'],['lokasi','Lokasi']],
     komponen:[['nama','Nama'],['jumlah','Jumlah stok']]
   }[key];
   var s=STATE.sort[key];
@@ -1006,6 +1006,13 @@ function getFiltered(key){
   arr.sort(function(a,b){
     var va,vb;
     if(s.by==='kondisi'){va=KONDISI_RANK[a.kondisi]||9;vb=KONDISI_RANK[b.kondisi]||9;}
+    else if(s.by==='sisa'){
+      var pa=sisaPct(a), pb=sisaPct(b);
+      if(pa===null&&pb===null) return 0;
+      if(pa===null) return 1;
+      if(pb===null) return -1;
+      va=pa; vb=pb;
+    }
     else if(s.by==='jumlah'){va=num(a.jumlah);vb=num(b.jumlah);}
     else {va=String(a[s.by]||'').toLowerCase();vb=String(b[s.by]||'').toLowerCase();}
     if(va<vb)return s.dir==='asc'?-1:1;
